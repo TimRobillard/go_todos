@@ -49,11 +49,11 @@ func (s *PostgresStore) Init() error {
 	return err
 }
 
-func (s *PostgresStore) CreateToDo(title string) (*Todo, error) {
-	query := `INSERT INTO todo (title) 
-	VALUES($1)
+func (s *PostgresStore) CreateToDo(title string, userId int) (*Todo, error) {
+	query := `INSERT INTO todo (title, user_id) 
+	VALUES($1, $2)
 	RETURNING id;`
-	fmt.Printf("title: %s", title)
+	fmt.Printf("title: %s", title, userId)
 
 	var id int
 	err := s.db.QueryRow(query, title).Scan(&id)
@@ -85,7 +85,7 @@ func (s *PostgresStore) GetAllTodos() ([]*Todo, error) {
 	fmt.Println("1")
 	for rows.Next() {
 		fmt.Println("2-1")
-		todo := &Todo{} 
+		todo := &Todo{}
 		fmt.Println("2")
 		rows.Scan(&todo.Id, &todo.Title, &todo.Complete)
 		fmt.Println("3")

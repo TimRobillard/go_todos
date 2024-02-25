@@ -1,10 +1,13 @@
 package api
 
 import (
+	"fmt"
 	"html/template"
 	"io"
+	"net/http"
 	"os"
 
+	myMiddleware "github.com/TimRobillard/todo_go/api/middleware"
 	"github.com/TimRobillard/todo_go/store"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -39,6 +42,20 @@ func Register(e *echo.Echo, pg *store.PostgresStore) error {
 	e.Renderer = t
 	e.Static("/dist", "dist")
 
+	home := e.Group("/")
+	home.Use(myMiddleware.MyJwtMiddleware)
+	home.GET("/", func(c echo.Context) error {
+		fmt.Println("index")
+		todos, err := pg.GetAllTodos()
+		if err != nil {
+			fmt.Printf(err.Error())
+			return c.String(http.StatusNotFound, "Something went wrong")
+		}
+
+		return c.Render(http.StatusOK, "index", todos)
+	})
+
+	RegisterAuthRoutes(e, pg)
 	RegisterTodoRoutes(e, pg)
 
 	return nil

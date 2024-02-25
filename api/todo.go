@@ -1,28 +1,27 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
+	"github.com/TimRobillard/todo_go/api/middleware"
 	"github.com/TimRobillard/todo_go/store"
 	"github.com/labstack/echo/v4"
 )
 
+type CustomContext struct {
+	userId int
+	echo.Context
+}
+
 func RegisterTodoRoutes(e *echo.Echo, pg *store.PostgresStore) error {
-	e.GET("/", func(c echo.Context) error {
-		todos, err := pg.GetAllTodos()
-		if err != nil {
-			fmt.Printf(err.Error())
-			return c.String(http.StatusNotFound, "Something went wrong")
-		}
+	t := e.Group("/todo")
+	t.Use(middleware.MyJwtMiddleware)
 
-		return c.Render(http.StatusOK, "index", todos)
-	})
-
-	e.POST("/todo", func(c echo.Context) error {
+	t.POST("/", func(c echo.Context) error {
 		title := c.FormValue("todo")
-		todo, err := pg.CreateToDo(title)
+		userId := middleware.GetUserIdFromRequest(c)
+		todo, err := pg.CreateToDo(title, userId)
 
 		if err != nil {
 			return c.String(http.StatusNotFound, err.Error())
@@ -31,7 +30,7 @@ func RegisterTodoRoutes(e *echo.Echo, pg *store.PostgresStore) error {
 		return c.Render(http.StatusOK, "todo", todo)
 	})
 
-	e.PUT("/todo/:id", func(c echo.Context) error {
+	t.PUT("/:id", func(c echo.Context) error {
 		_id := c.Param("id")
 		id, err := strconv.Atoi(_id)
 
