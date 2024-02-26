@@ -2,17 +2,32 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/TimRobillard/todo_go/api"
 	"github.com/TimRobillard/todo_go/store"
 	"github.com/TimRobillard/todo_go/util"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
 	e := echo.New()
+	if os.Getenv("ENV") == "development" {
+		e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+			Format: "method=${method}, uri=${uri}, status=${status}\n",
+		}))
+	} else {
+		e.Use(middleware.Logger())
+	}
+
 	pg, err := store.NewPostgresStore()
-	pg.Init()
+	if err = pg.Init(); err != nil {
+		e.Logger.Fatal(err.Error())
+	}
+	if err = pg.InitUser(); err != nil {
+		e.Logger.Fatal(err.Error())
+	}
 
 	if err != nil {
 		e.Logger.Fatal(err)

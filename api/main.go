@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"io"
 	"net/http"
-	"os"
 
 	myMiddleware "github.com/TimRobillard/todo_go/api/middleware"
 	"github.com/TimRobillard/todo_go/store"
@@ -30,13 +29,6 @@ func Register(e *echo.Echo, pg *store.PostgresStore) error {
 		templates: template.Must(template.ParseGlob("views/*.html")),
 	}
 
-	if os.Getenv("ENV") == "development" {
-		e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
-			Format: "method=${method}, uri=${uri}, status=${status}\n",
-		}))
-	} else {
-		e.Use(middleware.Logger())
-	}
 	e.Use(middleware.Recover())
 
 	e.Renderer = t
@@ -44,9 +36,10 @@ func Register(e *echo.Echo, pg *store.PostgresStore) error {
 
 	home := e.Group("/")
 	home.Use(myMiddleware.MyJwtMiddleware)
-	home.GET("/", func(c echo.Context) error {
-		fmt.Println("index")
-		todos, err := pg.GetAllTodos()
+
+	home.GET("", func(c echo.Context) error {
+		userId := myMiddleware.GetUserIdFromRequest(c)
+		todos, err := pg.GetAllTodos(userId)
 		if err != nil {
 			fmt.Printf(err.Error())
 			return c.String(http.StatusNotFound, "Something went wrong")

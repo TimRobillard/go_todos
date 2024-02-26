@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"net/http"
-	"strings"
+	"time"
 
 	"github.com/TimRobillard/todo_go/util"
 	"github.com/golang-jwt/jwt/v5"
@@ -21,7 +21,14 @@ func GetUserIdFromRequest(c echo.Context) int {
 
 func MyJwtMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		tokenStr := strings.Replace(c.Request().Header.Get("Authorization"), "Bearer ", "", 1)
+
+		cookie, err := c.Request().Cookie("_q")
+		if err != nil {
+			return c.Redirect(http.StatusTemporaryRedirect, "/login")
+		}
+
+		tokenStr := cookie.Value
+
 		token, err := jwt.ParseWithClaims(tokenStr, &JwtCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 			return []byte(util.GetEnv("JWT_SECRET", "secret")), nil
 		})
@@ -32,4 +39,17 @@ func MyJwtMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		c.Set("userId", claims.Id)
 		return next(c)
 	}
+}
+
+func GenerateToken(id int) (string, error) {
+	claims := &JwtCustomClaims{
+		id,
+		jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	t, err := token.SignedString([]byte(util.GetEnv("JWT_SECRET", "secret")))
+	return t, err
 }

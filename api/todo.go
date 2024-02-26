@@ -14,17 +14,17 @@ type CustomContext struct {
 	echo.Context
 }
 
-func RegisterTodoRoutes(e *echo.Echo, pg *store.PostgresStore) error {
+func RegisterTodoRoutes(e *echo.Echo, pg store.TodoStorage) error {
 	t := e.Group("/todo")
 	t.Use(middleware.MyJwtMiddleware)
 
-	t.POST("/", func(c echo.Context) error {
+	t.POST("", func(c echo.Context) error {
 		title := c.FormValue("todo")
 		userId := middleware.GetUserIdFromRequest(c)
-		todo, err := pg.CreateToDo(title, userId)
+		todo, err := pg.CreateTodo(title, userId)
 
 		if err != nil {
-			return c.String(http.StatusNotFound, err.Error())
+			return c.String(http.StatusBadRequest, err.Error())
 		}
 
 		return c.Render(http.StatusOK, "todo", todo)
@@ -33,12 +33,13 @@ func RegisterTodoRoutes(e *echo.Echo, pg *store.PostgresStore) error {
 	t.PUT("/:id", func(c echo.Context) error {
 		_id := c.Param("id")
 		id, err := strconv.Atoi(_id)
+		userId := middleware.GetUserIdFromRequest(c)
 
 		if err != nil {
 			return err
 		}
 
-		err = pg.ToggleTodo(id)
+		err = pg.ToggleComplete(id, userId)
 		if err != nil {
 			return c.String(http.StatusNotFound, err.Error())
 		}
