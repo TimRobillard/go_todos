@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+
 	"github.com/TimRobillard/todo_go/api"
 	"github.com/TimRobillard/todo_go/store"
 	"github.com/TimRobillard/todo_go/util"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {

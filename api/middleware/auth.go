@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/TimRobillard/todo_go/util"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
+
+	"github.com/TimRobillard/todo_go/util"
 )
 
 type JwtCustomClaims struct {
@@ -21,7 +22,6 @@ func GetUserIdFromRequest(c echo.Context) int {
 
 func MyJwtMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-
 		cookie, err := c.Request().Cookie("_q")
 		if err != nil {
 			return c.Redirect(http.StatusTemporaryRedirect, "/login")
@@ -29,9 +29,13 @@ func MyJwtMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		tokenStr := cookie.Value
 
-		token, err := jwt.ParseWithClaims(tokenStr, &JwtCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
-			return []byte(util.GetEnv("JWT_SECRET", "secret")), nil
-		})
+		token, err := jwt.ParseWithClaims(
+			tokenStr,
+			&JwtCustomClaims{},
+			func(token *jwt.Token) (interface{}, error) {
+				return []byte(util.GetEnv("JWT_SECRET", "secret")), nil
+			},
+		)
 		if err != nil || !token.Valid {
 			return c.Redirect(http.StatusTemporaryRedirect, "/login")
 		}

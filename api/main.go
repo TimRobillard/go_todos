@@ -1,15 +1,17 @@
 package api
 
 import (
-	"fmt"
 	"html/template"
 	"io"
 	"net/http"
+	"strings"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 
 	myMiddleware "github.com/TimRobillard/todo_go/api/middleware"
 	"github.com/TimRobillard/todo_go/store"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/TimRobillard/todo_go/views"
 )
 
 type Template struct {
@@ -39,13 +41,19 @@ func Register(e *echo.Echo, pg *store.PostgresStore) error {
 
 	home.GET("", func(c echo.Context) error {
 		userId := myMiddleware.GetUserIdFromRequest(c)
-		todos, err := pg.GetAllTodos(userId)
+
+		user, err := pg.GetUserById(userId)
 		if err != nil {
-			fmt.Printf(err.Error())
 			return c.String(http.StatusNotFound, "Something went wrong")
 		}
 
-		return c.Render(http.StatusOK, "index", todos)
+		todos, err := pg.GetAllTodos(userId)
+		if err != nil {
+			return c.String(http.StatusNotFound, "Something went wrong")
+		}
+
+		component := views.Index(strings.Title(user.Username), todos)
+		return render(c, component)
 	})
 
 	RegisterAuthRoutes(e, pg)

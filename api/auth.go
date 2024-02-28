@@ -56,8 +56,13 @@ func RegisterAuthRoutes(e *echo.Echo, pg store.UserStorage) error {
 		}
 
 		user, err := pg.GetUserByUsername(username)
-		if err != nil || !user.ValidatePassword(password) {
+		if err != nil {
 			return c.String(http.StatusBadRequest, err.Error())
+		}
+
+		valid := user.ValidatePassword(password)
+		if valid == false {
+			return c.String(http.StatusBadRequest, "Invalid username or password")
 		}
 
 		token, err := middleware.GenerateToken(user.Id)
@@ -75,6 +80,18 @@ func RegisterAuthRoutes(e *echo.Echo, pg store.UserStorage) error {
 		c.Response().Header().Set("Hx-Redirect", "/")
 
 		return c.String(http.StatusOK, "Success")
+	})
+
+	g.POST("/logout", func(c echo.Context) error {
+		cookie := &http.Cookie{
+			Value:   "nil",
+			Name:    "_q",
+			Path:    "/",
+			Expires: time.Now().Add(-1 * time.Minute),
+		}
+		c.SetCookie(cookie)
+		c.Response().Header().Set("Hx-Redirect", "/login")
+		return c.String(http.StatusTemporaryRedirect, "Success")
 	})
 
 	return nil

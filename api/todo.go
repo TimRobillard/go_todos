@@ -6,6 +6,7 @@ import (
 
 	"github.com/TimRobillard/todo_go/api/middleware"
 	"github.com/TimRobillard/todo_go/store"
+	"github.com/TimRobillard/todo_go/views"
 	"github.com/labstack/echo/v4"
 )
 
@@ -26,8 +27,8 @@ func RegisterTodoRoutes(e *echo.Echo, pg store.TodoStorage) error {
 		if err != nil {
 			return c.String(http.StatusBadRequest, err.Error())
 		}
-
-		return c.Render(http.StatusOK, "todo", todo)
+		component := views.Todo(todo)
+		return render(c, component)
 	})
 
 	t.PUT("/:id", func(c echo.Context) error {

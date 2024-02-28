@@ -1,7 +1,0 @@
-{{define "todo"}}
-<li class="list-none p-2 flex justify-between border border-slate-200 rounded-md shadow">
-  <label for="{{.Id}}-check" class="flex-auto">{{.Title}}</label>
-  <input id="{{.Id}}-check" type="checkbox" {{if .Complete}} checked="true" {{end}} hx-put="/todo/{{.Id}}"
-    hx-swap="none" />
-</li>
-{{end}}
