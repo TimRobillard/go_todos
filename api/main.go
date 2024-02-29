@@ -1,8 +1,6 @@
 package api
 
 import (
-	"html/template"
-	"io"
 	"net/http"
 	"strings"
 
@@ -14,26 +12,13 @@ import (
 	"github.com/TimRobillard/todo_go/views"
 )
 
-type Template struct {
-	templates *template.Template
-}
-
-func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
-	return t.templates.ExecuteTemplate(w, name, data)
-}
-
 type Api struct {
 	store *store.PostgresStore
 }
 
 func Register(e *echo.Echo, pg *store.PostgresStore) error {
-	t := &Template{
-		templates: template.Must(template.ParseGlob("views/*.html")),
-	}
-
 	e.Use(middleware.Recover())
 
-	e.Renderer = t
 	e.Static("/dist", "dist")
 
 	home := e.Group("/")

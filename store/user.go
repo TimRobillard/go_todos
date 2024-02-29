@@ -2,6 +2,7 @@ package store
 
 import (
 	"fmt"
+	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -26,7 +27,7 @@ type UserStorage interface {
 }
 
 func (pg PostgresStore) InitUser() error {
-fmt.Println("creating users table")
+	fmt.Println("creating users table")
 	query := `CREATE TABLE IF NOT EXISTS users(
 		id SERIAL PRIMARY KEY,
 		username VARCHAR(255) NOT NULL UNIQUE,
@@ -38,7 +39,10 @@ fmt.Println("creating users table")
 	return err
 }
 
-func (pg PostgresStore) CreateUser(username, password string) (*SafeUser, error) {
+func (pg PostgresStore) CreateUser(u, password string) (*SafeUser, error) {
+	username := strings.ToLower(u)
+	username = strings.Trim(username, " ")
+
 	query := `INSERT INTO users(username, password)
 	VALUES($1, $2)
 	RETURNING id;`

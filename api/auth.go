@@ -2,19 +2,24 @@ package api
 
 import (
 	"net/http"
+	"strings"
 	"time"
+
+	"github.com/labstack/echo/v4"
 
 	"github.com/TimRobillard/todo_go/api/middleware"
 	"github.com/TimRobillard/todo_go/store"
-	"github.com/labstack/echo/v4"
+	"github.com/TimRobillard/todo_go/views"
 )
 
 func RegisterAuthRoutes(e *echo.Echo, pg store.UserStorage) error {
 	e.GET("/register", func(c echo.Context) error {
-		return c.Render(http.StatusOK, "register", nil)
+		component := views.Register()
+		return render(c, component)
 	})
 	e.GET("/login", func(c echo.Context) error {
-		return c.Render(http.StatusOK, "login", nil)
+		component := views.Login()
+		return render(c, component)
 	})
 
 	g := e.Group("/auth")
@@ -23,17 +28,22 @@ func RegisterAuthRoutes(e *echo.Echo, pg store.UserStorage) error {
 		username := c.FormValue("username")
 		password := c.FormValue("password")
 		if len(username) == 0 || len(password) == 0 {
-			return c.String(http.StatusBadRequest, "username and password required")
+			return sendBadLogin(c, "Username and password required")
 		}
 
 		user, err := pg.CreateUser(username, password)
 		if err != nil {
-			return c.String(http.StatusBadRequest, err.Error())
+			if strings.Contains(err.Error(), "duplicate key") {
+				c.Response().Status = 400
+				component := views.UsernameTaken(username)
+				return render(c, component)
+			}
+			return sendBadLogin(c, "Something went wrong, please try again")
 		}
 
 		token, err := middleware.GenerateToken(user.Id)
 		if err != nil {
-			return c.String(http.StatusFound, "Incorrect username or password")
+			return sendBadLogin(c, "Something went wrong, please try again")
 		}
 
 		cookie := &http.Cookie{
@@ -52,22 +62,22 @@ func RegisterAuthRoutes(e *echo.Echo, pg store.UserStorage) error {
 		username := c.FormValue("username")
 		password := c.FormValue("password")
 		if len(username) == 0 || len(password) == 0 {
-			return c.String(http.StatusBadRequest, "username and password required")
+			return sendBadLogin(c, "Username and password required")
 		}
 
 		user, err := pg.GetUserByUsername(username)
 		if err != nil {
-			return c.String(http.StatusBadRequest, err.Error())
+			return sendBadLogin(c, "Incorrect username or password")
 		}
 
 		valid := user.ValidatePassword(password)
 		if valid == false {
-			return c.String(http.StatusBadRequest, "Invalid username or password")
+			return sendBadLogin(c, "Incorrect username or password")
 		}
 
 		token, err := middleware.GenerateToken(user.Id)
 		if err != nil {
-			return c.String(http.StatusFound, "Incorrect username or password")
+			return sendBadLogin(c, "Incorrect username or password")
 		}
 
 		cookie := &http.Cookie{
@@ -95,4 +105,12 @@ func RegisterAuthRoutes(e *echo.Echo, pg store.UserStorage) error {
 	})
 
 	return nil
+}
+
+func sendBadLogin(c echo.Context, msg string) error {
+	errorComponent := views.BadLogin(msg)
+	c.Response().Status = 401
+	return render(
+		c, errorComponent,
+	)
 }
