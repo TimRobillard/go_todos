@@ -12,20 +12,19 @@ templ Index(username string, todos []*store.Todo) {
 			<script src="https://unpkg.com/htmx.org/dist/ext/loading-states.js"></script>
 		</head>
 		<body class="flex flex-col items-center justify-center p-2">
-			<nav class="sm:w-full md:w-[696px] flex w-full justify-between items-center">
+			<nav class="sm:w-full md:w-[696px] flex w-full justify-between items-center py-2">
 				<div class="text-white select-none">Logout</div>
 				<h1 class="text-5xl text-center font-bold flex-auto">{ username }'s' Todos</h1>
 				<div class="cursor-pointer hover:text-blue-600 text-blue-400" hx-post="/auth/logout">Logout</div>
 			</nav>
 			<div class="md:w-[696px] sm:w-full">
 				<form
-					class="rounded-md border border-slate-200 shadow items-center p-2 flex mb-2 gap-2"
+					class="shadow items-center flex mb-4 gap-4"
 					hx-post="/todo"
 					hx-target="#todo-list"
 					hx-swap="beforeend"
 					hx-on::after-request="this.reset()"
 				>
-					<label class="font-bold" for="todo-input">Add Todo</label>
 					<input
 						class="border h-auto rounded-md flex-auto p-2"
 						id="todo-input"
@@ -33,11 +32,9 @@ templ Index(username string, todos []*store.Todo) {
 						name="todo"
 						value=""
 						autocomplete="off"
+            autofocus
+            placeholder="Add a todo"
 					/>
-					<button class="border border-gray-300 rounded-md px-4 py-2" type="submit">
-						Submit
-						<div data-loading>Loading</div>
-					</button>
 				</form>
 				<ul id="todo-list" class="flex flex-col gap-2">
 					for _, todo := range todos {

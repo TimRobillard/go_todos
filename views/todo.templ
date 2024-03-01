@@ -1,10 +1,19 @@
 package views
 
-import "github.com/TimRobillard/todo_go/store"
+import (
+	"fmt"
+	"github.com/TimRobillard/todo_go/store"
+)
 
 templ Todo(todo *store.Todo) {
-	<li class="list-none p-2 flex justify-between border border-slate-200 rounded-md shadow">
-		<label for="{todo.Id}-check" class="flex-auto">{ todo.Title }</label>
-		<input id="{todo.Id}-check" type="checkbox" checked?={ todo.Complete } hx-put="/todo/{todo.Id}" hx-swap="none"/>
+	<li class="list-none py-2 px-4 flex justify-between border border-slate-200 rounded-md shadow">
+		<label for={ fmt.Sprintf("%d-check", todo.Id) } class="flex-auto">{ todo.Title }</label>
+		<input
+			id={ fmt.Sprintf("%d-check", todo.Id) }
+			type="checkbox"
+			checked?={ todo.Complete }
+			hx-put={ fmt.Sprintf("/todo/%d", todo.Id) }
+			hx-swap="none"
+		/>
 	</li>
 }
