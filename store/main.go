@@ -15,8 +15,9 @@ type PostgresStore struct {
 func NewPostgresStore() (*PostgresStore, error) {
 	user := os.Getenv("PG_USER")
 	dbname := os.Getenv("PG_DBNAME")
-	pw := os.Getenv("PG_PASSDWORD")
+	pw := os.Getenv("PG_PASSWORD")
 	connStr := fmt.Sprintf("user=%s dbname=%s password=%s sslmode=disable", user, dbname, pw)
+	fmt.Printf("\n\n ---------  %s -------------\n\n", connStr)
 	if db, err := sql.Open("postgres", connStr); err != nil {
 		return nil, err
 	} else {

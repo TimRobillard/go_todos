@@ -23,6 +23,10 @@ func main() {
 	}
 
 	pg, err := store.NewPostgresStore()
+	if err != nil {
+		e.Logger.Fatal(err.Error())
+	}
+
 	if err = pg.Init(); err != nil {
 		e.Logger.Fatal(err.Error())
 	}
